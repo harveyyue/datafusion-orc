@@ -12,7 +12,8 @@ include = ["src/**/*.rs", "Cargo.toml"]
 rust-version = "1.73"
 
 [dependencies]
-arrow = { version = "52", features = ["prettyprint", "chrono-tz"] }
+#arrow = { version = "52", features = ["prettyprint", "chrono-tz"] }
+arrow = { version = "50.0.0", features = ["ffi"]}
 bytes = "1.4"
 chrono = { version = "0.4.37", default-features = false, features = ["std"] }
 chrono-tz = "0.9"
@@ -47,14 +48,41 @@ clap = { version = "4.5.4", features = ["derive"], optional = true }
 opendal = { version = "0.48", optional = true, default-features = false }
 
 # datafusion support
-datafusion = { version = "39.0.0", optional = true }
-datafusion-expr = { version = "39.0.0", optional = true }
-datafusion-physical-expr = { version = "39.0.0", optional = true }
-object_store = { version = "0.10.1", optional = true }
+#datafusion = { version = "39.0.0", optional = true }
+#datafusion-expr = { version = "39.0.0", optional = true }
+#datafusion-physical-expr = { version = "39.0.0", optional = true }
+# datafusion: branch=v36-blaze
+datafusion = { version = "36.0.0", optional = true }
+datafusion-expr = { version = "36.0.0", optional = true }
+datafusion-physical-expr = { version = "36.0.0", optional = true }
+object_store = { version = "0.9.0", optional = true }
+
+[patch.crates-io]
+# datafusion: branch=v36-blaze
+datafusion = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+datafusion-common = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+datafusion-expr = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+datafusion-execution = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+datafusion-optimizer = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+datafusion-physical-expr = { git = "https://github.com/harveyyue/datafusion.git", rev = "d33877f8fbc7c57de946dc6081b2b357eedd0df9"}
+
+# arrow: branch=v50-blaze
+arrow = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-arith = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-array = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-buffer = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-cast = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-data = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-ord = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-row = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-schema = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-select = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+arrow-string = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
+parquet = { git = "https://github.com/blaze-init/arrow-rs.git", rev = "7471d70f7ae6edd5d4da82b7d966a8ede720e499"}
 
 [dev-dependencies]
-arrow-ipc = { version = "52.0.0", features = ["lz4"] }
-arrow-json = "52.0.0"
+#arrow-ipc = { version = "52.0.0", features = ["lz4"] }
+#arrow-json = "52.0.0"
 criterion = { version = "0.5", default-features = false, features = ["async_tokio"] }
 opendal = { version = "0.48", default-features = false, features = ["services-memory"] }
 pretty_assertions = "1.3.0"
@@ -62,7 +90,7 @@ proptest = "1.0.0"
 serde_json = { version = "1.0", default-features = false, features = ["std"] }
 
 [features]
-default = ["async"]
+default = ["datafusion"]
 
 async = ["async-trait", "futures", "futures-util", "tokio"]
 cli = ["anyhow", "clap"]

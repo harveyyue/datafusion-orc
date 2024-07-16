@@ -30,10 +30,9 @@ use datafusion::error::Result;
 use datafusion::execution::context::TaskContext;
 use datafusion::physical_plan::metrics::{ExecutionPlanMetricsSet, MetricsSet};
 use datafusion::physical_plan::{
-    DisplayAs, DisplayFormatType, ExecutionMode, ExecutionPlan, Partitioning, PlanProperties,
-    SendableRecordBatchStream,
+    DisplayAs, DisplayFormatType, ExecutionPlan, Partitioning, SendableRecordBatchStream,
 };
-use datafusion_physical_expr::EquivalenceProperties;
+use datafusion_physical_expr::PhysicalSortExpr;
 
 use futures_util::StreamExt;
 use object_store::ObjectStore;
@@ -44,22 +43,19 @@ use super::object_store_reader::ObjectStoreReader;
 pub struct OrcExec {
     config: FileScanConfig,
     metrics: ExecutionPlanMetricsSet,
-    properties: PlanProperties,
+    projected_schema: SchemaRef,
+    projected_output_ordering: Vec<Vec<PhysicalSortExpr>>,
 }
 
 impl OrcExec {
     pub fn new(config: FileScanConfig) -> Self {
         let metrics = ExecutionPlanMetricsSet::new();
-        let (projected_schema, _, orderings) = config.project();
-        let properties = PlanProperties::new(
-            EquivalenceProperties::new_with_orderings(projected_schema, &orderings),
-            Partitioning::UnknownPartitioning(config.file_groups.len()),
-            ExecutionMode::Bounded,
-        );
+        let (projected_schema, _, projected_output_ordering) = config.project();
         Self {
             config,
             metrics,
-            properties,
+            projected_schema,
+            projected_output_ordering,
         }
     }
 }
@@ -76,7 +72,21 @@ impl ExecutionPlan for OrcExec {
         self
     }
 
-    fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>> {
+    fn schema(&self) -> SchemaRef {
+        Arc::clone(&self.projected_schema)
+    }
+
+    fn output_partitioning(&self) -> Partitioning {
+        Partitioning::UnknownPartitioning(self.config.file_groups.len())
+    }
+
+    fn output_ordering(&self) -> Option<&[PhysicalSortExpr]> {
+        self.projected_output_ordering
+            .first()
+            .map(|ordering| ordering.as_slice())
+    }
+
+    fn children(&self) -> Vec<Arc<dyn ExecutionPlan>> {
         vec![]
     }
 
@@ -87,13 +97,9 @@ impl ExecutionPlan for OrcExec {
         Ok(self)
     }
 
-    fn properties(&self) -> &PlanProperties {
-        &self.properties
-    }
-
-    fn metrics(&self) -> Option<MetricsSet> {
-        Some(self.metrics.clone_inner())
-    }
+    // fn properties(&self) -> &PlanProperties {
+    //     &self.properties
+    // }
 
     fn execute(
         &self,
@@ -129,6 +135,10 @@ impl ExecutionPlan for OrcExec {
 
         let stream = FileStream::new(&self.config, partition_index, opener, &self.metrics)?;
         Ok(Box::pin(stream))
+    }
+
+    fn metrics(&self) -> Option<MetricsSet> {
+        Some(self.metrics.clone_inner())
     }
 }
 
