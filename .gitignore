@@ -5,3 +5,9 @@ venv
 
 private/
 *.txt
+
+# IDEA
+.idea/
+
+# macOS
+.DS_Store
