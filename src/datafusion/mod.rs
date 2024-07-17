@@ -29,7 +29,6 @@ use std::sync::Arc;
 
 use datafusion::arrow::datatypes::SchemaRef;
 use datafusion::common::exec_err;
-use datafusion::config::TableOptions;
 use datafusion::dataframe::DataFrame;
 use datafusion::datasource::listing::{
     ListingOptions, ListingTable, ListingTableConfig, ListingTableUrl,
@@ -68,7 +67,6 @@ impl ReadOptions<'_> for OrcReadOptions<'_> {
     fn to_listing_options(
         &self,
         _config: &SessionConfig,
-        _table_options: TableOptions,
     ) -> ListingOptions {
         let file_format = OrcFormat::new();
         ListingOptions::new(Arc::new(file_format)).with_file_extension(self.file_extension)
@@ -147,7 +145,7 @@ impl SessionContextOrcExt for SessionContext {
         options: OrcReadOptions<'_>,
     ) -> Result<()> {
         let listing_options =
-            options.to_listing_options(&self.copied_config(), self.copied_table_options());
+            options.to_listing_options(&self.copied_config());
         self.register_listing_table(name, table_path, listing_options, None, None)
             .await?;
         Ok(())
