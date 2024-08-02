@@ -38,7 +38,7 @@ impl OrcExec {
             config,
             metrics,
             projected_schema,
-            projected_output_ordering
+            projected_output_ordering,
         }
     }
 }

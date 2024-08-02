@@ -64,10 +64,7 @@ impl<'a> Default for OrcReadOptions<'a> {
 
 #[async_trait]
 impl ReadOptions<'_> for OrcReadOptions<'_> {
-    fn to_listing_options(
-        &self,
-        _config: &SessionConfig,
-    ) -> ListingOptions {
+    fn to_listing_options(&self, _config: &SessionConfig) -> ListingOptions {
         let file_format = OrcFormat::new();
         ListingOptions::new(Arc::new(file_format)).with_file_extension(self.file_extension)
     }
@@ -144,8 +141,7 @@ impl SessionContextOrcExt for SessionContext {
         table_path: &str,
         options: OrcReadOptions<'_>,
     ) -> Result<()> {
-        let listing_options =
-            options.to_listing_options(&self.copied_config());
+        let listing_options = options.to_listing_options(&self.copied_config());
         self.register_listing_table(name, table_path, listing_options, None, None)
             .await?;
         Ok(())
