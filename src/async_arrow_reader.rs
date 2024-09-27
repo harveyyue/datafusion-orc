@@ -87,6 +87,13 @@ impl<R: AsyncChunkReader + 'static> StripeFactory<R> {
             .cloned();
 
         if let Some(info) = info {
+            if let Some(range) = self.inner.range.clone() {
+                let offset = info.offset() as usize;
+                if offset < range.start || offset >= range.end {
+                    self.inner.stripe_index += 1;
+                    return Ok((self, None));
+                }
+            }
             match self.read_next_stripe_inner(&info).await {
                 Ok(stripe) => Ok((self, Some(stripe))),
                 Err(err) => Err(err),
@@ -197,6 +204,7 @@ impl<R: AsyncChunkReader + 'static> ArrowReaderBuilder<R> {
             file_metadata: self.file_metadata,
             projected_data_type,
             stripe_index: 0,
+            range: self.range,
         };
         ArrowStreamReader::new(cursor, self.batch_size, schema_ref)
     }

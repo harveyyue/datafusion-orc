@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Range;
 use std::sync::Arc;
 
 use arrow::datatypes::SchemaRef;
@@ -21,6 +22,7 @@ pub struct ArrowReaderBuilder<R> {
     pub(crate) batch_size: usize,
     pub(crate) projection: ProjectionMask,
     pub(crate) schema_ref: Option<SchemaRef>,
+    pub(crate) range: Option<Range<usize>>,
 }
 
 impl<R> ArrowReaderBuilder<R> {
@@ -31,6 +33,7 @@ impl<R> ArrowReaderBuilder<R> {
             batch_size: DEFAULT_BATCH_SIZE,
             projection: ProjectionMask::all(),
             schema_ref: None,
+            range: None,
         }
     }
 
@@ -50,6 +53,11 @@ impl<R> ArrowReaderBuilder<R> {
 
     pub fn with_schema(mut self, schema: SchemaRef) -> Self {
         self.schema_ref = Some(schema);
+        self
+    }
+
+    pub fn with_range(mut self, range: Range<usize>) -> Self {
+        self.range = Some(range);
         self
     }
 
@@ -91,6 +99,7 @@ impl<R: ChunkReader> ArrowReaderBuilder<R> {
             file_metadata: self.file_metadata,
             projected_data_type,
             stripe_index: 0,
+            range: self.range,
         };
         ArrowReader {
             cursor,
@@ -159,6 +168,7 @@ pub(crate) struct Cursor<R> {
     pub file_metadata: Arc<FileMetadata>,
     pub projected_data_type: RootDataType,
     pub stripe_index: usize,
+    pub range: Option<Range<usize>>,
 }
 
 impl<R: ChunkReader> Iterator for Cursor<R> {
